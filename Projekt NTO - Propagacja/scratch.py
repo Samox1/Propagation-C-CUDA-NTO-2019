@@ -6,22 +6,24 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 path_file = Path("Test_NTO_1024.bmp")
+#path_file = Path("indeks.bmp")
 im = Image.open(path_file).convert('L')
-
-u_in = np.array(im)
-u_in = u_in / u_in.max()
-print(u_in[0][0])
 
 width, height = im.size
 x = height
 y = width
 print(x,y)
 
+u_in = np.array(im, dtype=complex)
+u_in = u_in / u_in.max()
+print(u_in[0][0])
+
 h_z_kappa = np.empty([x,y], dtype=complex)
 h_z = np.empty([x,y], dtype=complex)
 H_Z = np.empty([x,y], dtype=complex)
+u_in_fft = np.empty([x,y], dtype=complex)
 u_out = np.empty([x,y], dtype=complex)
-#h_z = np.zeros((x,y))
+
 lam = 633*(pow(10,(-9)))
 k = 2*np.pi/lam
 z = 1000*(pow(10,(-3)))   #odlegosc symulacji
@@ -42,7 +44,11 @@ h_z = h_z_kappa * (np.exp(1j * k * z) / (1j * lam * z))
 print(h_z[0][0])
 
 #u_out = scipy.signal.convolve2d(u_in, h_z)
+#u_in_fft = np.fft.fft2(u_in)
+#u_in_fft = np.fft.fftshift(np.fft.fft2(u_in))
 u_in_fft = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(u_in)))
+
+
 #u_out = np.multiply(u_out, np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(h_z))))
 h_z = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(h_z)))
 #u_out = u_out * h_z
@@ -55,13 +61,11 @@ h_z = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(h_z)))
 
 #U_fft = np.array((x,y))
 #u_out = np.multiply(np.fft.fft2(u_in), np.fft.fft2(h_z))
-u_out = np.multiply(np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(u_in))), h_z)
-u_out = np.fft.ifftshift(np.fft.ifft2(np.fft.fftshift(u_out)))
+u_out = np.multiply(u_in_fft, h_z)
+u_out = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(u_out)))
+#u_out = np.fft.ifft2(u_out)
 
 #rozwiaznie = fftshift(fft2(ifftshift()))
-
-#u_out = np.fft.ifft2(u_out)
-#u_out = np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(U_fft)))
 
 #for i in range(x):
 #   for o in range(y):
@@ -86,9 +90,17 @@ h_z = h_z + abs(h_z.min())
 h_z = np.rint((h_z / h_z.max())*255)
 scipy.misc.imsave("h_z.bmp", h_z)
 
+u_out_imag = u_out.imag
+
 u_out = u_out.real
 u_out = u_out + abs(u_out.min())
 u_out = np.rint((u_out / u_out.max())*255)
-u_out_name = "u_out_size_" + str(x) + "_dist_" + str(z) + ".bmp"
+u_out_name = "u_out_REAL_size_" + str(x) + "_dist_" + str(z) + ".bmp"
 scipy.misc.imsave(u_out_name, u_out)
+
+#u_out_imag = u_out_imag.imag
+u_out_imag = u_out_imag + abs(u_out_imag.min())
+u_out_imag = np.rint((u_out_imag / u_out_imag.max())*255)
+u_out_name = "u_out_IMAG_size_" + str(x) + "_dist_" + str(z) + ".bmp"
+scipy.misc.imsave(u_out_name, u_out_imag)
 #plt.imshow(u_out)
