@@ -8,10 +8,9 @@ import matplotlib.pyplot as plt
 path_file = Path("Test_NTO_1024.bmp")
 #path_file = Path("indeks.bmp")
 im = Image.open(path_file).convert('L')
-
-mx = 100
-my = 100
 width, height = im.size
+mx = height
+my = width
 x = height + mx
 y = width + my
 print("Input Matrix size = " + str(width) + "x" + str(height))
@@ -40,7 +39,7 @@ o = 0
 for i in range(x):
     for o in range(y):
         h_z_kappa[i, o] = np.exp(1j*k*(pow((i-(x/2))*sampling, 2) + pow((o-(y/2))*sampling, 2))/(2*z))
-        #H_Z[i, o] = np.exp(1j*k*z) * np.exp(-1j*np.pi*lam*z*((pow(((i-(x/2))*sampling), 2) + pow(((o-(y/2))*sampling), 2))))
+        H_Z[i, o] = np.exp(1j*k*z)*np.exp((-1j)*np.pi*lam*z*((pow(((i-(x/2))*sampling), 2) + pow(((o-(y/2))*sampling), 2))))
 h_z = h_z_kappa * (np.exp(1j * k * z) / (1j * lam * z))
 
 u_in_fft = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(u_in)))
@@ -58,10 +57,10 @@ u_in_fft = u_in_fft + abs(u_in_fft.min())
 u_in_fft = np.rint((u_in_fft / u_in_fft.max())*255)
 scipy.misc.imsave("u_in_fft.bmp", u_in_fft)
 
-h_z = h_z.real
-h_z = h_z + abs(h_z.min())
-h_z = np.rint((h_z / h_z.max())*255)
-scipy.misc.imsave("h_z.bmp", h_z)
+#h_z = h_z.real
+#h_z = h_z + abs(h_z.min())
+#h_z = np.rint((h_z / h_z.max())*255)
+#scipy.misc.imsave("h_z.bmp", h_z)
 
 u_out_imag = u_out
 
