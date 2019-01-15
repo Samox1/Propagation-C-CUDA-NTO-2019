@@ -11,7 +11,7 @@ Poniżej jest propozycja listy zadań, które doprowadzą do stworzenia programu
 
 * [ ] Wybór wydajnego algorytmu
 
-    Jako metodę symulacji propagacji światła wykorzysta
+    Jako metodę symulacji propagacji światła wykorzysta <br />
 
 * [ ] Analiza i optymalizacja algorytmu
 * [ ] Przykładowy kod w Pythonie
