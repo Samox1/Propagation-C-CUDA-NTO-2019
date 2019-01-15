@@ -4,7 +4,7 @@
 Projekt opierający się o komunikację MPI i bibliotekę CUDA, by wykorzystać pełny potencjał obliczeniowy klastra DWARF wydziału Fizyki PW. <br />
 Poniżej jest propozycja listy zadań, które doprowadzą do stworzenia programu projektowego.
 
-* [ ] Przegląd Literatury
+* [ ] {font-size: 9pt;}Przegląd Literatury
 
     Propagacja światła koherentnego przez dowolne przeźrocze - dyfrakcja - jest ciągle ciekawym tematem dla naukowców - pomaga zrozumieć naturę światła i jest szeroko wykorzystywana podczas symulacji układów optycznych. 
     Istnieje wiele metod symulacji propagacji światła 
