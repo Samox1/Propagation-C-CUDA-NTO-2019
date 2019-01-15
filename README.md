@@ -23,7 +23,7 @@ Jedną z wad tego algorytmu są krawędzie tablic - wprowadzające zniekształce
 * [x] Przykładowy kod w Pythonie
 
 Wykonano przykładowy kod w Pythonie wykorzystujący biblioteki numpy, scipy, PIL i pathlib. Używając tablicy 1024x1024 piksele sprawdzono amplitudę i fazę po propagacji na odległość 1 metra. Wynik wydaje się być prawidłowy porównując do obrazów z programy LightSword stworzonego specjalnie do takich obliczeń.
-Optymalizacji może jeszcze ulec funkcja PSF by uzyskać od razu *FFT{h}* .
+Optymalizacji może jeszcze ulec funkcja PSF by uzyskać od razu *FFT{h}*.
 
 
 * [ ] Implementacja algorytmu w C++
