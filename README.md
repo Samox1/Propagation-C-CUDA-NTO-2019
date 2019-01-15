@@ -12,12 +12,19 @@ Istnieje kilka metod symulacji propagacji światła m.in. liczenie całki tablic
 
 * [ ] Wybór wydajnego algorytmu
 
-Jako metodę symulacji propagacji światła wykorzystana zostanie metoda splotowa. Bardzo dobrą literaturą ukazującą algorytm, jak i zalety i wady tej metody jest artykuł Profesora Macieja Sypka [[1]](https://gitlab.com/SimonPW/nto-2019/blob/master/B_01_199504_OptComm.PDF).
+Jako metodę symulacji propagacji światła wykorzystana zostanie metoda splotowa. Bardzo dobrą literaturą ukazującą algorytm, jak i zalety i wady tej metody jest artykuł Profesora Macieja Sypka [[1]](https://gitlab.com/SimonPW/nto-2019/blob/master/B_01_199504_OptComm.PDF). Ze względu na czasochłonne obliczenia związane ze splotem dwóch funkcji, w tym przypadku tablicy wejściowej (u1) oraz odpowiedzi impulsowej - PSF (Point Spread Function), 
 
 
 * [ ] Analiza i optymalizacja algorytmu
+
 * [ ] Przykładowy kod w Pythonie
+
 * [ ] Implementacja algorytmu w C++
+
 * [ ] Optymalizacja kodu pod kątem CUDA
+
 * [ ] Wykorzystanie MPI i CUDA
+
 * [ ] Docelowa architektura wykorzystująca protokół MPI i wiele GPU na jednym węźle
+
+
