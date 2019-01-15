@@ -2,7 +2,7 @@
 ## Projekt CUDA - propagacja światła za przeźroczem - model 3D
 
 Projekt opierający się o komunikację MPI i bibliotekę CUDA, by wykorzystać pełny potencjał obliczeniowy klastra DWARF wydziału Fizyki PW. <br />
-Poniżej jest propozycja listy zadań, które doprowadzą do stworzenia programu projektowego.
+Poniżej jest propozycja listy zadań, które doprowadzą do stworzenia projektowego programu.
 
 * [x] Przegląd Literatury
 
