@@ -1,6 +1,7 @@
 // Kappa - this is project file for NTO project - Light Propagation with GPU
 // Autorzy: Szymon Baczyński && Łukasz Szeląg
-// Projekt na przedmiot NTO 2018/2019 
+// Projekt na przedmiot NTO 2018/2019
+
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -106,6 +107,53 @@ void amplitude_print(cufftDoubleComplex* u_in_fft, int NX, int NY)
 	}
 }
 
+int FFT_Z2Z(cufftDoubleComplex* dData, int NX, int NY)
+{
+	// Create a 2D FFT plan. 
+	int err = 0;
+	cufftHandle plan1;
+	if (cufftPlan2d(&plan1, NX, NY, CUFFT_Z2Z) != CUFFT_SUCCESS){
+		fprintf(stderr, "CUFFT Error: Unable to create plan\n");
+		err = -1;	
+	}
+
+	if (cufftExecZ2Z(plan1, dData, dData, CUFFT_FORWARD) != CUFFT_SUCCESS){
+		fprintf(stderr, "CUFFT Error: Unable to execute plan\n");
+		err = -1;		
+	}
+
+	if (cudaDeviceSynchronize() != cudaSuccess){
+  		fprintf(stderr, "Cuda error: Failed to synchronize\n");
+   		err = -1;
+	}	
+	
+	cufftDestroy(plan1);
+	return err;
+}
+
+int IFFT_Z2Z(cufftDoubleComplex* dData, int NX, int NY)
+{
+	// Create a 2D FFT plan.
+	int err = 0; 
+	cufftHandle plan1;
+	if (cufftPlan2d(&plan1, NX, NY, CUFFT_Z2Z) != CUFFT_SUCCESS){
+		fprintf(stderr, "CUFFT Error: Unable to create plan\n");
+		err = -1;	
+	}
+
+	if (cufftExecZ2Z(plan1, dData, dData, CUFFT_INVERSE) != CUFFT_SUCCESS){
+		fprintf(stderr, "CUFFT Error: Unable to execute plan\n");
+		err = -1;		
+	}
+
+	if (cudaDeviceSynchronize() != cudaSuccess){
+  		fprintf(stderr, "Cuda error: Failed to synchronize\n");
+   		err = -1;
+	}
+
+	cufftDestroy(plan1);	
+	return err;
+}
 
 /*
  * complie: nvcc -o prop.x prop.cu -O3 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_37,code=sm_37 -gencode=arch=compute_60,code=sm_60 -I/usr/local/cuda/inc -L/usr/local/cuda/lib -lcufft
@@ -119,7 +167,7 @@ int main(int *argc, char *argv[])
 	ifstream inputFile;
 	int COL = atoi(argv[2]);
 	int ROW = atoi(argv[3]);
-	float u_in[ROW][COL];
+	double u_in[ROW][COL];
 	cout << "DUPA WELCOME" << " | " << argv[0] << " | " << argv[1] << " | " << argv[2] << " | " << argv[3] << endl;
 	cout << "ROW: " << ROW << " | " << "COL: " << COL <<endl;
 	inputFile.open(argv[1]);
@@ -131,16 +179,13 @@ int main(int *argc, char *argv[])
 			for (j = 0; j < COL; j++)
 			{	
 				inputFile >> u_in[i][j];
-				//cout << u_in[i][j];
 			}
-		//cout << endl;
 		}
 		cout << endl;
 	} else {
 		cout << "Error opening the file.\n";
 	}
 	inputFile.close();
-
 
 
 // --- Liczenie propagacji i FFT --- //
@@ -169,22 +214,6 @@ int main(int *argc, char *argv[])
 	cufftDoubleComplex* data;
 	data = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
 
-//Test do kasacji	
-/*	int NX = 12;		//Pomoc
-	int NY = 12;		//Test na mniejszej tablicy
-
-	cufftComplex* data;
-	data = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
-
-	for(int ii=0; ii<NX*NY; ii++)
-	{	
-		data[ii].x = ii;
-		data[ii].y = ii;
-	}
-*/	
-//KONIEC TESTU
-
-
 	cufftDoubleComplex* dData;
 	cudaMalloc((void **) &dData, sizeof(cufftDoubleComplex)* NX * NY);
 
@@ -210,17 +239,8 @@ int main(int *argc, char *argv[])
 		}
 	}
 
-	//printf( "Org vals: \n");
-	//for(int ii=0; ii<NX*NY ; ii++)
-	//{
-	//	if (ii%NX == 0){
-	//		printf("\n");
-	//	}
-	//	printf ( "%.0f ", data[ii].x );	
-	//}
-
 // Liczenie U_in = FFT{u_in}
-	cufftHandle plan1;
+	
 	size_t pitch1;
  	cudaMallocPitch(&dData, &pitch1, sizeof(cufftDoubleComplex)*NX, NY);
 	cudaMemcpy2D(dData,pitch1,data,sizeof(cufftDoubleComplex)*NX,sizeof(cufftDoubleComplex)*NX,NX,cudaMemcpyHostToDevice);
@@ -230,26 +250,10 @@ int main(int *argc, char *argv[])
 		return -1;	
 	}
 
-// Create a 2D FFT plan. 
-	if (cufftPlan2d(&plan1, NX, NY, CUFFT_Z2Z) != CUFFT_SUCCESS){
-		fprintf(stderr, "CUFFT Error: Unable to create plan\n");
-		return -1;	
-	}
-
-	if (cufftExecZ2Z(plan1, dData, dData, CUFFT_FORWARD) != CUFFT_SUCCESS){
-		fprintf(stderr, "CUFFT Error: Unable to execute plan\n");
-		return -1;		
-	}
-
-	if (cudaDeviceSynchronize() != cudaSuccess){
-  		fprintf(stderr, "Cuda error: Failed to synchronize\n");
-   		return -1;
-	}	
-
+	if (FFT_Z2Z(dData, NX, NY) == -1) { return -1; }
 
 // --- Liczenie H_Z = FFT{h_z_tab} --- //
-	cufftHandle plan_H;
-
+	
 	cufftDoubleComplex* H_Z;
 	cudaMalloc((void **) &H_Z, sizeof(cufftDoubleComplex)* NX * NY);
 
@@ -262,22 +266,7 @@ int main(int *argc, char *argv[])
 		return -1;	
 	}
 
-// Create a 2D FFT plan. 
-	if (cufftPlan2d(&plan_H, NX, NY, CUFFT_Z2Z) != CUFFT_SUCCESS){
-		fprintf(stderr, "CUFFT Error: Unable to create plan_H\n");
-		return -1;	
-	}
-
-	if (cufftExecZ2Z(plan_H, H_Z, H_Z, CUFFT_FORWARD) != CUFFT_SUCCESS){
-		fprintf(stderr, "CUFFT EXEC Error: Unable to execute plan_H\n");
-		return -1;		
-	}
-
-	if (cudaDeviceSynchronize() != cudaSuccess){
-  		fprintf(stderr, "Cuda error: Failed to synchronize\n");
-   		return -1;
-	}	
-	
+	if (FFT_Z2Z(H_Z, NX, NY) == -1) { return -1; }
 
 	// Do the actual multiplication
 
@@ -285,31 +274,8 @@ int main(int *argc, char *argv[])
 	
 
 // --- Liczenie u_out = iFFT{dData = U_OUT} --- //
-	cufftHandle plan2;
-	//size_t pitch3;
- 	//cudaMallocPitch(&dData, &pitch3, sizeof(cufftDoubleComplex)*NX, NY);
-	//cudaMemcpy2D(dData,pitch3,data,sizeof(cufftDoubleComplex)*NX,sizeof(cufftDoubleComplex)*NX,NX,cudaMemcpyHostToDevice);
- 	
-	if (cudaGetLastError() != cudaSuccess){
-		fprintf(stderr, "Cuda error: Failed to allocate\n");
-		return -1;	
-	}
 
-// Create a 2D FFT plan. 
-	if (cufftPlan2d(&plan2, NX, NY, CUFFT_Z2Z) != CUFFT_SUCCESS){
-		fprintf(stderr, "CUFFT Error: Unable to create plan2\n");
-		return -1;	
-	}
-
-	if (cufftExecZ2Z(plan2, dData, dData, CUFFT_INVERSE) != CUFFT_SUCCESS){
-		fprintf(stderr, "CUFFT EXEC Error: Unable to execute plan2\n");
-		return -1;		
-	}
-
-	if (cudaDeviceSynchronize() != cudaSuccess){
-  		fprintf(stderr, "Cuda error: Failed to synchronize\n");
-   		return -1;
-	}	
+	if (IFFT_Z2Z(dData, NX, NY) == -1) { return -1; }
 
 
 	cudaMemcpy(data, dData, sizeof(cufftDoubleComplex)*NX*NY, cudaMemcpyDeviceToHost);
@@ -317,27 +283,36 @@ int main(int *argc, char *argv[])
 	printf( "\nCUFFT vals: \n");
 	
 //TEST - wypisania
+//Test do kasacji	
+/*	int NX = 12;		//Pomoc
+	int NY = 12;		//Test na mniejszej tablicy
 
+	cufftComplex* data;
+	data = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
+
+	for(int ii=0; ii<NX*NY; ii++)
+	{	
+		data[ii].x = ii;
+		data[ii].y = ii;
+	}
+*/	
+//KONIEC TESTU
 
 // Czytanie calosci
 
 
 // --- ROLL cwiartek, zeby wszystko sie zgadzalo na koniec --- //
 
-	cufftDoubleComplex* u_in_fft;
-	u_in_fft = (cufftDoubleComplex *) malloc (sizeof(cufftDoubleComplex)* NX/2 * NY/2);
+	cufftDoubleComplex* u_out;
+	u_out = (cufftDoubleComplex *) malloc (sizeof(cufftDoubleComplex)* NX/2 * NY/2);
 
-	Q_roll(u_in_fft, data, NX, NY);
+	Q_roll(u_out, data, NX, NY);
 
 // --- Przeliczanie Amplitudy --- //
 
-	amplitude_print(u_in_fft, NX, NY);
-	
-	cufftDestroy(plan1);
-	cufftDestroy(plan2);
-	cufftDestroy(plan_H);
-	
-	cudaFree(u_in_fft);
+	amplitude_print(u_out, NX, NY);
+		
+	cudaFree(u_out);
 	cudaFree(data);
 	cudaFree(dData);
 	cudaFree(h_z_tab);
