@@ -3,12 +3,38 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <math.h>
+#include <complex>
+#include <cmath>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 #include <cufft.h>
 
 using namespace std;
 // --- Main Part ---
+
+/*
+void h_z(double lam, double z, double k, double sampling, int NX, int NY, cufftComplex* h_z_tab)
+{
+	double fi = k * z;
+	double teta = k / (2.0 * z);
+	double quad = 0;	
+
+	for(int iy=0; iy < NY; iy++)
+	{
+		printf("\n");
+		for(int ix=0; ix < NX ; ix++)
+		{
+			quad = pow((ix-(NX/2))*sampling, 2) + pow((iy-(NY/2))*sampling, 2);
+			teta = teta * quad;
+			//h_z_tab[iy*NX+ix].x = ((cos(fi) * sin(teta))+(sin(fi)*cos(teta))) / (lam*z);
+			//h_z_tab[iy*NX+ix].y = ((cos(fi) * cos(teta))+(sin(fi)*sin(teta))) / (lam*z);
+			h_z_tab[iy*NX+ix] = exp(1i*fi)*exp(1i*teta)/(1i*lam*z);
+			printf("%.1f\t", h_z_tab[iy*NX+ix].x);
+		}
+	}	
+}
+*/
 
 /*
  * complie: nvcc -o prop.x prop.cu -O3 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_37,code=sm_37 -gencode=arch=compute_60,code=sm_60 -I/usr/local/cuda/inc -L/usr/local/cuda/lib -lcufft
@@ -39,9 +65,57 @@ int main(int *argc, char *argv[])
 		cout << "Error opening the file.\n";
 	}
 	inputFile.close();
-				// --- FFT tablicy wejsciowej --- //
+
+
+
+// --- Liczenie propagacji i FFT --- //
+
 	int NX = 2*COL;
 	int NY = 2*ROW;
+
+// --- Przeliczenie h_z --- //
+
+	double sampling = 10.0 * pow(10.0, (-6)); 	// Sampling = 10 micro
+	double lam = 633.0 * (pow(10.0,(-9))); 		// Lambda = 633 nm
+	double k = 2.0 * M_PI / lam;			// Wektor falowy k
+	double z = 1000.0*(pow(10.0,(-3)));		// Odleglosc propagacji = 1 metr
+
+	printf("k = %.1f | lam = %.1f | z = %.1f", k, lam, z);
+
+	std::complex<double>* h_z_tab;
+	h_z_tab = (std::complex<double> *) malloc ( sizeof(std::complex<double>)* NX * NY);
+
+	//cufftDoubleComplex* h_z_tab;
+	//h_z_tab = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
+	//h_z(lam, z, k, sampling, NX, NY, h_z_tab);
+
+	double fi = k * z;
+	double teta = k / (2.0 * z);
+	double quad = 0;	
+
+	for(int iy=0; iy < NY; iy++)
+	{
+		//printf("\n");
+		for(int ix=0; ix < NX ; ix++)
+		{
+			quad = pow(((double)ix-((double)NX/2.0))*sampling, 2) + pow(((double)iy-((double)NY/2.0))*sampling, 2);
+			teta = teta * quad;
+			//printf("%.6f\t", quad);
+			h_z_tab[iy*NX+ix] = exp(1i*fi)*exp(1i*teta)/(1i*lam*z);
+			//h_z_tab[iy*NX+ix].x = sin(fi+teta) / (lam*z);
+			//h_z_tab[iy*NX+ix].y = (-1.0 * cos(fi+teta)) / (lam*z);
+			//printf("%.1f\t", h_z_tab[iy*NX+ix].real());
+		}
+	}	
+	quad = pow(((double)1.0-((double)NX/2.0))*sampling, 2) + pow(((double)0.0-((double)NY/2.0))*sampling, 2);
+	teta = teta * quad;
+	printf("%.6f | %.6f", quad, teta);
+	//printf("%.1f\t", h_z_tab[0].x);
+
+	printf("\n");
+
+// --- FFT tablicy wejsciowej --- //
+	
 	cufftHandle plan;
 	
 	cufftComplex* data;
@@ -71,16 +145,16 @@ int main(int *argc, char *argv[])
 			data[(ii*NX+jj)+(NX*NY/4+NX/4)].x = (float)u_in[ii][jj];
 		}
 	}
-/*
-	printf( "Org vals: \n");
-	for(int ii=0; ii<NX*NY ; ii++)
-	{
-		if (ii%NX == 0){
-			printf("\n");
-		}
-		printf ( "%.0f ", data[ii].x );	
-	}
-*/
+
+	//printf( "Org vals: \n");
+	//for(int ii=0; ii<NX*NY ; ii++)
+	//{
+	//	if (ii%NX == 0){
+	//		printf("\n");
+	//	}
+	//	printf ( "%.0f ", data[ii].x );	
+	//}
+
 	size_t pitch;
  	cudaMallocPitch(&dData, &pitch, sizeof(cufftComplex)*NX, NY);
 	cudaMemcpy2D(dData,pitch,data,sizeof(cufftComplex)*NX,sizeof(cufftComplex)*NX,NX,cudaMemcpyHostToDevice);
@@ -110,14 +184,21 @@ int main(int *argc, char *argv[])
 	
 	printf( "\nCUFFT vals: \n");
 	
-// TEST - wypisania
-	/*
+//TEST - wypisania
+
+//Test do kasacji	
+/*	int NX = 12;		//Pomoc
+	int NY = 12;		//Test na mniejszej tablicy
+
+	cufftComplex* data;
+	data = (cufftComplex *) malloc ( sizeof(cufftComplex)* NX * NY);
+
 	for(int ii=0; ii<NX*NY; ii++)
 	{	
 		data[ii].x = ii;
 	}
-	*/
-// KONIEC TESTU
+*/	
+//KONIEC TESTU
 /*	int kappa = 0;
 	for(int ii=NX*NY/4+NX/4; ii<(NX*NY)-(NX*NY/4+NX/4); ii++)
 	{	
@@ -161,35 +242,79 @@ int main(int *argc, char *argv[])
 
 // Czytanie calosci
 
-	for(int ii=0; ii<(NX*NY); ii++)
+
+// --- ROLL cwiartek, zeby wszystko sie zgadzalo na koniec --- //
+
+	cufftComplex* u_in_fft;
+	u_in_fft = (cufftComplex *) malloc (sizeof(cufftComplex)* NX/2 * NY/2);
+
+	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q1 -> Q4
+	{
+		for(int jx=0; jx<(NX/4); jx++)
+		{
+			u_in_fft[(NX/2*NY/4+NY/4)+(jx+iy*NX/2)] = data[iy*(NX)+jx];
+		}
+	}
+	//u_in_fft[(ii*(NX/4)+jj)+((NX/2)*(NY/4)+NX/4)] = data[iy*(NX)+jx];
+
+	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q3 -> Q2
+	{
+		for(int jx=0; jx<(NX/4); jx++)
+		{
+			u_in_fft[(jx+NX/4)+(iy*NX/2)] = data[(iy*(NX)+jx)+(NX*NY*3/4)];
+		}
+	}
+
+	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q4 -> Q1
+	{
+		for(int jx=0; jx<(NX/4); jx++)
+		{
+			u_in_fft[(jx)+(iy*NX/2)] = data[((iy*NX)+jx)+(NX*3/4+NX*NY*3/4)];
+		}
+	}
+
+	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q2 -> Q3
+	{
+		for(int jx=0; jx<(NX/4); jx++)
+		{
+			u_in_fft[(jx)+(iy*NX/2)+NX*NY/2/4] = data[((iy*NX)+jx)+(NX*3/4)];
+		}
+	}
+
+
+// --- Przeliczanie Amplitudy --- //
+
+	for(int ii=0; ii<(NX*NY/4); ii++)
 	{	
-		data[ii].x = sqrt(pow(data[ii].x, 2) + pow(data[ii].y, 2));
+		u_in_fft[ii].x = sqrt(pow(u_in_fft[ii].x, 2) + pow(u_in_fft[ii].y, 2));
 	}
 	
-	float mini_data = data[0].x;
+	float mini_data = u_in_fft[0].x;
 	
-	for(int ii=0; ii<(NX*NY); ii++)
+	for(int ii=0; ii<(NX*NY/4); ii++)
 	{		
-		if (data[ii].x < mini_data){ mini_data = data[ii].x; }
+		if (u_in_fft[ii].x < mini_data){ mini_data = u_in_fft[ii].x; }
 	}
 	
-	float max_data = data[0].x;
+	float max_data = u_in_fft[0].x;
 
-	for(int ii=0; ii<(NX*NY); ii++)
+	for(int ii=0; ii<(NX*NY/4); ii++)
 	{		
-		data[ii].x = data[ii].x + abs(mini_data);
-		if (data[ii].x > max_data) { max_data = data[ii].x; }
+		u_in_fft[ii].x = u_in_fft[ii].x + abs(mini_data);
+		if (u_in_fft[ii].x > max_data) { max_data = u_in_fft[ii].x; }
 	}
 
-	for(int ii=0; ii<(NX*NY); ii++)
+	for(int ii=0; ii<(NX*NY/4); ii++)
 	{	
-		if (ii%NX == 0){printf("\n");}
-		data[ii].x = data[ii].x / max_data * 255;
-		printf ( "%.0f ", data[ii].x);
+		//if (ii%(NX/2) == 0){printf("\n");}
+		u_in_fft[ii].x = u_in_fft[ii].x / max_data * 255;
+		//printf ("%.0f\t", u_in_fft[ii].x);
 	}
 
-
+	
 	cufftDestroy(plan);
+	cudaFree(h_z_tab);
+	cudaFree(u_in_fft);
 	cudaFree(data);
 	cudaFree(dData);
 	return 0;
