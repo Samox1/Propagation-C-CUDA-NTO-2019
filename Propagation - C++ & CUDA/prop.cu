@@ -1,5 +1,6 @@
 // Kappa - this is project file for NTO project - Light Propagation with GPU
-
+// Autorzy: Szymon Baczyński && Łukasz Szeląg
+// Projekt na przedmiot NTO 2018/2019 
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -28,9 +29,6 @@ __global__ void multiplyElementwise(cufftDoubleComplex* f0, cufftDoubleComplex* 
         f0[i].y = a*d + b*c;
     }
 }
-
-
-// --- Main Part ---
 
 
 void h_z(double lam, double z, double k, double sampling, int NX, int NY, cufftDoubleComplex* h_z_cutab)
@@ -63,40 +61,19 @@ void h_z(double lam, double z, double k, double sampling, int NX, int NY, cufftD
 
 void Q_roll(cufftDoubleComplex* u_in_fft, cufftDoubleComplex* data, int NX, int NY)
 {
-	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q1 -> Q4
+	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej
 	{
 		for(int jx=0; jx<(NX/4); jx++)
 		{
-			u_in_fft[(NX/2*NY/4+NY/4)+(jx+iy*NX/2)] = data[iy*(NX)+jx];
-		}
-	}
-	
-	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q3 -> Q2
-	{
-		for(int jx=0; jx<(NX/4); jx++)
-		{
-			u_in_fft[(jx+NX/4)+(iy*NX/2)] = data[(iy*(NX)+jx)+(NX*NY*3/4)];
-		}
-	}
-
-	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q4 -> Q1
-	{
-		for(int jx=0; jx<(NX/4); jx++)
-		{
-			u_in_fft[(jx)+(iy*NX/2)] = data[((iy*NX)+jx)+(NX*3/4+NX*NY*3/4)];
-		}
-	}
-
-	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q2 -> Q3
-	{
-		for(int jx=0; jx<(NX/4); jx++)
-		{
-			u_in_fft[(jx)+(iy*NX/2)+NX*NY/2/4] = data[((iy*NX)+jx)+(NX*3/4)];
+			u_in_fft[(NX/2*NY/4+NY/4)+(jx+iy*NX/2)] = data[iy*(NX)+jx];		// Q1 -> Q4
+			u_in_fft[(jx+NX/4)+(iy*NX/2)] = data[(iy*(NX)+jx)+(NX*NY*3/4)];		// Q3 -> Q2
+			u_in_fft[(jx)+(iy*NX/2)] = data[((iy*NX)+jx)+(NX*3/4+NX*NY*3/4)];	// Q4 -> Q1
+			u_in_fft[(jx)+(iy*NX/2)+NX*NY/2/4] = data[((iy*NX)+jx)+(NX*3/4)];	// Q2 -> Q3
 		}
 	}
 }
 
-void amplitude_print(cufftDoubleComplex* u_in_fft, int NX, int NY
+void amplitude_print(cufftDoubleComplex* u_in_fft, int NX, int NY)
 {
 	// --- Przeliczanie Amplitudy --- //
 
@@ -113,17 +90,18 @@ void amplitude_print(cufftDoubleComplex* u_in_fft, int NX, int NY
 	}
 	
 	double max_data = u_in_fft[0].x;
-
+	mini_data = -mini_data;
+	
 	for(int ii=0; ii<(NX*NY/4); ii++)
 	{		
-		u_in_fft[ii].x = u_in_fft[ii].x + abs(mini_data);
+		u_in_fft[ii].x = u_in_fft[ii].x + mini_data;
 		if (u_in_fft[ii].x > max_data) { max_data = u_in_fft[ii].x; }
 	}
 
 	for(int ii=0; ii<(NX*NY/4); ii++)
 	{	
 		if (ii%(NX/2) == 0){printf("\n");}
-		u_in_fft[ii].x = u_in_fft[ii].x / max_data * 255;
+		u_in_fft[ii].x = u_in_fft[ii].x / max_data * 255.0;
 		printf ("%.0f\t", u_in_fft[ii].x);
 	}
 }
@@ -133,6 +111,9 @@ void amplitude_print(cufftDoubleComplex* u_in_fft, int NX, int NY
  * complie: nvcc -o prop.x prop.cu -O3 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_37,code=sm_37 -gencode=arch=compute_60,code=sm_60 -I/usr/local/cuda/inc -L/usr/local/cuda/lib -lcufft
  * start program: ./prop.x Tablica-1024x1024.txt 1024 1024 > 1024x1024.txt
  */
+
+// --- Main Part --- //
+
 int main(int *argc, char *argv[])
 {
 	ifstream inputFile;
@@ -187,6 +168,22 @@ int main(int *argc, char *argv[])
 	
 	cufftDoubleComplex* data;
 	data = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
+
+//Test do kasacji	
+/*	int NX = 12;		//Pomoc
+	int NY = 12;		//Test na mniejszej tablicy
+
+	cufftComplex* data;
+	data = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
+
+	for(int ii=0; ii<NX*NY; ii++)
+	{	
+		data[ii].x = ii;
+		data[ii].y = ii;
+	}
+*/	
+//KONIEC TESTU
+
 
 	cufftDoubleComplex* dData;
 	cudaMalloc((void **) &dData, sizeof(cufftDoubleComplex)* NX * NY);
@@ -284,14 +281,14 @@ int main(int *argc, char *argv[])
 
 	// Do the actual multiplication
 
-	multiplyElementwise<<<NX/256+1, 256>>>(dData, H_Z, NX*NY);
-
+	multiplyElementwise<<<NX*NY, 1>>>(dData, H_Z, NX*NY);
+	
 
 // --- Liczenie u_out = iFFT{dData = U_OUT} --- //
 	cufftHandle plan2;
-	size_t pitch3;
- 	cudaMallocPitch(&dData, &pitch3, sizeof(cufftDoubleComplex)*NX, NY);
-	cudaMemcpy2D(dData,pitch3,data,sizeof(cufftDoubleComplex)*NX,sizeof(cufftDoubleComplex)*NX,NX,cudaMemcpyHostToDevice);
+	//size_t pitch3;
+ 	//cudaMallocPitch(&dData, &pitch3, sizeof(cufftDoubleComplex)*NX, NY);
+	//cudaMemcpy2D(dData,pitch3,data,sizeof(cufftDoubleComplex)*NX,sizeof(cufftDoubleComplex)*NX,NX,cudaMemcpyHostToDevice);
  	
 	if (cudaGetLastError() != cudaSuccess){
 		fprintf(stderr, "Cuda error: Failed to allocate\n");
@@ -321,20 +318,6 @@ int main(int *argc, char *argv[])
 	
 //TEST - wypisania
 
-//Test do kasacji	
-/*	int NX = 12;		//Pomoc
-	int NY = 12;		//Test na mniejszej tablicy
-
-	cufftComplex* data;
-	data = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
-
-	for(int ii=0; ii<NX*NY; ii++)
-	{	
-		data[ii].x = ii;
-	}
-*/	
-//KONIEC TESTU
-
 
 // Czytanie calosci
 
@@ -344,68 +327,11 @@ int main(int *argc, char *argv[])
 	cufftDoubleComplex* u_in_fft;
 	u_in_fft = (cufftDoubleComplex *) malloc (sizeof(cufftDoubleComplex)* NX/2 * NY/2);
 
-	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q1 -> Q4
-	{
-		for(int jx=0; jx<(NX/4); jx++)
-		{
-			u_in_fft[(NX/2*NY/4+NY/4)+(jx+iy*NX/2)] = data[iy*(NX)+jx];
-		}
-	}
-	
-	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q3 -> Q2
-	{
-		for(int jx=0; jx<(NX/4); jx++)
-		{
-			u_in_fft[(jx+NX/4)+(iy*NX/2)] = data[(iy*(NX)+jx)+(NX*NY*3/4)];
-		}
-	}
-
-	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q4 -> Q1
-	{
-		for(int jx=0; jx<(NX/4); jx++)
-		{
-			u_in_fft[(jx)+(iy*NX/2)] = data[((iy*NX)+jx)+(NX*3/4+NX*NY*3/4)];
-		}
-	}
-
-	for(int iy=0; iy<(NY/4); iy++)	//Petla na przepisanie tablicy koncowej - Q2 -> Q3
-	{
-		for(int jx=0; jx<(NX/4); jx++)
-		{
-			u_in_fft[(jx)+(iy*NX/2)+NX*NY/2/4] = data[((iy*NX)+jx)+(NX*3/4)];
-		}
-	}
-
+	Q_roll(u_in_fft, data, NX, NY);
 
 // --- Przeliczanie Amplitudy --- //
 
-	for(int ii=0; ii<(NX*NY/4); ii++)
-	{	
-		u_in_fft[ii].x = sqrt(pow(u_in_fft[ii].x, 2) + pow(u_in_fft[ii].y, 2));
-	}
-	
-	double mini_data = u_in_fft[0].x;
-	
-	for(int ii=0; ii<(NX*NY/4); ii++)
-	{		
-		if (u_in_fft[ii].x < mini_data){ mini_data = u_in_fft[ii].x; }
-	}
-	
-	double max_data = u_in_fft[0].x;
-
-	for(int ii=0; ii<(NX*NY/4); ii++)
-	{		
-		u_in_fft[ii].x = u_in_fft[ii].x + abs(mini_data);
-		if (u_in_fft[ii].x > max_data) { max_data = u_in_fft[ii].x; }
-	}
-
-	for(int ii=0; ii<(NX*NY/4); ii++)
-	{	
-		if (ii%(NX/2) == 0){printf("\n");}
-		u_in_fft[ii].x = u_in_fft[ii].x / max_data * 255;
-		printf ("%.0f\t", u_in_fft[ii].x);
-	}
-
+	amplitude_print(u_in_fft, NX, NY);
 	
 	cufftDestroy(plan1);
 	cufftDestroy(plan2);
