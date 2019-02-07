@@ -23,7 +23,7 @@ Program wykonuje się w następujących krokach:
 6.  Każdy proces oblicza dwuwymiarową tablicę odpowiedzi impulsowej (h(z) - zależna od odległości propagacji z) i wysyła ją na GPU.
 7.  GPU obliczają FFT odpowiedzi impulsowej, a następnie mnożą transformatę tablicy wejściowej z transformatą odpowiedzi impulsowej.
 8.  Wynik mnożenia zostaje poddany odwrotnej transformacie Fouriera. Po wykonaniu odwrotnej transformaty, jej wynik kopiowany jest z GPU na hosta.
-9.  Otrzymana tablica danych  
+9.  Otrzymana tablica danych zostaje poddana operacji ROLL. 
 10. Ostateczny wynik zostaje zapisany do pliku.
 
 
