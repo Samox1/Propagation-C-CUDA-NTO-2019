@@ -2,6 +2,12 @@
 // Autorzy: Szymon Baczyński && Łukasz Szeląg
 // Projekt na przedmiot NTO 2018/2019
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -11,6 +17,8 @@
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 #include <cufft.h>
+#include <omp.h>
+#include <mpi.h>
 
 using namespace std;
 
@@ -28,6 +36,26 @@ __global__ void multiplyElementwise(cufftDoubleComplex* f0, cufftDoubleComplex* 
         f0[i].x = a*c - b*d;
         f0[i].y = a*d + b*c;
     }
+}
+
+void u_in_in_big(double* u_in, cufftDoubleComplex* data, int NX, int NY)
+{
+	for(int ii=0; ii < NY ; ii++)
+	{
+		for(int jj=0; jj < NX ; jj++)
+		{
+			data[ii*NX+jj].x = 0;
+			data[ii*NX+jj].y = 0;
+		}
+	}
+
+	for(int ii=0; ii < (int)NY/2 ; ii++)
+	{
+		for(int jj=0; jj < (int)NX/2 ; jj++)
+		{
+			data[(ii*NX+jj)+(NX*NY/4+NX/4)].x = u_in[ii*(NX/2)+jj];
+		}
+	}
 }
 
 
@@ -73,7 +101,7 @@ void Q_roll(cufftDoubleComplex* u_in_fft, cufftDoubleComplex* data, int NX, int 
 	}
 }
 
-void amplitude_print(cufftDoubleComplex* u_in_fft, int NX, int NY)
+void amplitude_print(cufftDoubleComplex* u_in_fft, int NX, int NY, FILE* fp)
 {
 	// --- Przeliczanie Amplitudy --- //
 
@@ -100,9 +128,9 @@ void amplitude_print(cufftDoubleComplex* u_in_fft, int NX, int NY)
 
 	for(int ii=0; ii<(NX*NY/4); ii++)
 	{	
-		if (ii%(NX/2) == 0){printf("\n");}
+		if (ii%(NX/2) == 0){fprintf (fp,"\n");}
 		u_in_fft[ii].x = u_in_fft[ii].x / max_data * 255.0;
-		printf ("%.0f\t", u_in_fft[ii].x);
+		fprintf (fp,"%.0f\t", u_in_fft[ii].x);
 	}
 }
 
@@ -155,18 +183,28 @@ int IFFT_Z2Z(cufftDoubleComplex* dData, int NX, int NY)
 }
 
 /*
- * complie: nvcc -o prop.x prop.cu -O3 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_37,code=sm_37 -gencode=arch=compute_60,code=sm_60 -I/usr/local/cuda/inc -L/usr/local/cuda/lib -lcufft
+ * complie: nvcc -o prop.x prop.cu -O3 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_37,code=sm_37 -gencode=arch=compute_60,code=sm_60 -I/usr/local/cuda/inc -L/usr/local/cuda/lib -lcufft -I/opt/openmpi-gcc721-Cuda90/3.1.1/include -Xcompiler "-pthread -fPIC" -Xlinker "-Wl,-rpath -Wl,/opt/openmpi-gcc721-Cuda90/3.1.1/lib -Wl,--enable-new-dtags" -L/opt/openmpi-gcc721-Cuda90/3.1.1/lib -lmpi
  * start program: ./prop.x Tablica-1024x1024.txt 1024 1024 > 1024x1024.txt
  */
 
 // --- Main Part --- //
 
-int main(int *argc, char *argv[])
+int main(int argc, char *argv[])
 {
+
+// MPI --- Kappa
+
+	int ip, np;
+	MPI_Init(&argc, &argv);
+    	MPI_Comm_rank (MPI_COMM_WORLD, &ip);
+    	MPI_Comm_size (MPI_COMM_WORLD, &np);
+
+//if (ip == 0)
+//{
 	ifstream inputFile;
 	int COL = atoi(argv[2]);
 	int ROW = atoi(argv[3]);
-	double u_in[ROW][COL];
+	double u_in[ROW*COL];
 	cout << "DUPA WELCOME" << " | " << argv[0] << " | " << argv[1] << " | " << argv[2] << " | " << argv[3] << endl;
 	cout << "ROW: " << ROW << " | " << "COL: " << COL <<endl;
 	inputFile.open(argv[1]);
@@ -177,7 +215,7 @@ int main(int *argc, char *argv[])
 		{
 			for (j = 0; j < COL; j++)
 			{	
-				inputFile >> u_in[i][j];
+				inputFile >> u_in[i*ROW+j];
 			}
 		}
 		cout << endl;
@@ -185,10 +223,10 @@ int main(int *argc, char *argv[])
 		cout << "Error opening the file.\n";
 	}
 	inputFile.close();
-
+//}
 
 // --- Liczenie propagacji i FFT --- //
-
+	
 	int NX = 2*COL;
 	int NY = 2*ROW;
 
@@ -197,19 +235,17 @@ int main(int *argc, char *argv[])
 	double sampling = 10.0 * pow(10.0, (-6)); 	// Sampling = 10 micro
 	double lam = 633.0 * (pow(10.0,(-9))); 		// Lambda = 633 nm
 	double k = 2.0 * M_PI / lam;			// Wektor falowy k
-	double z = 1000.0*(pow(10.0,(-3)));		// Odleglosc propagacji = 1 metr
-
+	double z_in = 500.0*(pow(10.0,(-3)));		// Odleglosc propagacji = 1 metr
+	double z_out = 1000.0*(pow(10.0,(-3)));
+	double z_delta = 50.0*(pow(10.0,(-3)));
+	double z = z_in+(ip*z_delta);
+	
 	printf("k = %.1f | lam = %.1f | z = %.1f", k, lam, z);
-
-	cufftDoubleComplex* h_z_tab;
-	h_z_tab = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
-	h_z(lam, z, k, sampling, NX, NY, h_z_tab);	// Liczenie h_z
 
 	printf("\n");
 
 
 // --- FFT tablicy wejsciowej --- //
-	
 	cufftDoubleComplex* data;
 	data = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
 
@@ -221,22 +257,9 @@ int main(int *argc, char *argv[])
 		return -1;
 	}
 
-	for(int ii=0; ii < NY ; ii++)
-	{
-		for(int jj=0; jj < NX ; jj++)
-		{
-			data[ii*NX+jj].x = 0;
-			data[ii*NX+jj].y = 0;
-		}
-	}
-
-	for(int ii=0; ii < (int)NY/2 ; ii++)
-	{
-		for(int jj=0; jj < (int)NX/2 ; jj++)
-		{
-			data[(ii*NX+jj)+(NX*NY/4+NX/4)].x = (double)u_in[ii][jj];
-		}
-	}
+//if (ip == 0)
+//{
+	u_in_in_big(u_in, data, NX, NY);
 
 // Liczenie U_in = FFT{u_in}
 	
@@ -250,6 +273,27 @@ int main(int *argc, char *argv[])
 	}
 
 	if (FFT_Z2Z(dData, NX, NY) == -1) { return -1; }
+
+//}	
+	
+	//MPI_Bcast(data, NX*NY, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
+/*
+if(ip != 0){
+	cudaMallocPitch(&dData, &pitch1, sizeof(cufftDoubleComplex)*NX, NY);
+	cudaMemcpy2D(dData,pitch1,data,sizeof(cufftDoubleComplex)*NX,sizeof(cufftDoubleComplex)*NX,NX,cudaMemcpyHostToDevice);
+
+	if (cudaGetLastError() != cudaSuccess){
+		fprintf(stderr, "Cuda error: Failed to allocate\n");
+		return -1;	
+	}
+}
+*/
+
+// Liczenie h_z
+
+	cufftDoubleComplex* h_z_tab;
+	h_z_tab = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
+	h_z(lam, z, k, sampling, NX, NY, h_z_tab);	
 
 // --- Liczenie H_Z = FFT{h_z_tab} --- //
 	
@@ -281,22 +325,6 @@ int main(int *argc, char *argv[])
 
 	printf( "\nCUFFT vals: \n");
 	
-//TEST - wypisania
-//Test do kasacji	
-/*	int NX = 12;		//Pomoc
-	int NY = 12;		//Test na mniejszej tablicy
-
-	cufftComplex* data;
-	data = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
-
-	for(int ii=0; ii<NX*NY; ii++)
-	{	
-		data[ii].x = ii;
-		data[ii].y = ii;
-	}
-*/	
-//KONIEC TESTU
-
 // Czytanie calosci
 
 
@@ -309,13 +337,21 @@ int main(int *argc, char *argv[])
 
 // --- Przeliczanie Amplitudy --- //
 
-	amplitude_print(u_out, NX, NY);
+	char filename[128];
+	snprintf ( filename, 128, "result_z_%10.5lf.txt", z );
+	FILE* fp = fopen(filename,"w");
+
+	amplitude_print(u_out, NX, NY, fp);
+
+	fclose(fp);
 		
 	cudaFree(u_out);
 	cudaFree(data);
 	cudaFree(dData);
 	cudaFree(h_z_tab);
 	cudaFree(H_Z);
-
+	
+	MPI_Finalize();
+	
 	return 0;
 } 
