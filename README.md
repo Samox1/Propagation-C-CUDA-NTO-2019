@@ -12,8 +12,12 @@ Istnieje kilka metod symulacji propagacji światła m.in. liczenie całki tablic
 
 * [x] Wybór wydajnego algorytmu
 
-Jako metodę symulacji propagacji światła wykorzystana zostanie metoda splotowa. Bardzo dobrą literaturą ukazującą algorytm, jak i zalety i wady tej metody jest artykuł profesora Macieja Sypka [[1]](https://gitlab.com/SimonPW/nto-2019/blob/master/B_01_199504_OptComm.PDF). Ze względu na czasochłonne obliczenia związane ze splotem dwóch funkcji, w tym przypadku tablicy wejściowej (u<sub>1</sub>) oraz odpowiedzi impulsowej (*h*) - PSF (Point Spread Function), wykorzystano własności transformacji Fouriera. Szybszą i wydajniejszą metodą będzie zrobienie *FFT{u<sub>1</sub>}* oraz *FFT{h}* i wymnożenie obu tablic ze sobą, *U<sub>2</sub>* = *FFT{u<sub>1</sub>}* x *FFT{h}*. Wynikiem odwrotnej transormaty Fouriera  tablicy *U<sub>2</sub>* , będzie tablica zespolonych wartości, *u<sub>2</sub>* , które zawierają informację o amplitudzie i fazie w danym miejscu w przestrzeni.
-
+Jako metodę symulacji propagacji światła wykorzystana zostanie metoda splotowa. Bardzo dobrą literaturą ukazującą algorytm, jak i zalety i wady tej metody jest artykuł profesora Macieja Sypka [[1]](https://gitlab.com/SimonPW/nto-2019/blob/master/B_01_199504_OptComm.PDF). Ze względu na czasochłonne obliczenia związane ze splotem dwóch funkcji, w tym przypadku tablicy wejściowej (u<sub>1</sub>) oraz odpowiedzi impulsowej (*h*) - PSF (Point Spread Function), wykorzystano własności transformacji Fouriera. Szybszą i wydajniejszą metodą będzie zrobienie *FFT{u<sub>1</sub>}* oraz *FFT{h}* i wymnożenie obu tablic ze sobą, *U<sub>2</sub>* = *FFT{u<sub>1</sub>}* x *FFT{h}*. Wynikiem odwrotnej transormaty Fouriera  tablicy *U<sub>2</sub>* , będzie tablica zespolonych wartości, *u<sub>2</sub>* , które zawierają informację o amplitudzie i fazie w danym miejscu w przestrzeni. <br />
+<br />
+Program wykonuje się w następujących krokach: <br />
+1.  Stworzenie dwuwymiarowej tablicy wartości o zadanych przez użytkownika wymiarach (Tablica ta odpowiada przezroczu, przez które propaguje się światło).
+2.  Wpisanie tablicy utworzonej w punkcie 1 do tablicy dwa razy większej (Mniejsza tablica umieszczona w środku większej).
+3.  
 
 * [x] Analiza i optymalizacja algorytmu
 
@@ -26,15 +30,15 @@ Wykonano przykładowy kod w Pythonie wykorzystujący biblioteki numpy, scipy, PI
 Optymalizacji może jeszcze ulec funkcja PSF by uzyskać od razu *FFT{h}*. Działający algorytm jest podstawą do wyboru kierunku obliczeń przyszłego programu.
 
 ## Wybór rodzaju obliczeń: 
-* [ ] Obliczenia na tablicach o dużych wartościach *N* (duża precyzja lub duża powierzchnia przeźrocza)
-* [ ] Obliczenia wzdłuż osi *Z* (duża odległość lub duża dokładność)
+* [x] Obliczenia na tablicach o dużych wartościach *N* (duża precyzja lub duża powierzchnia przeźrocza)
+* [x] Obliczenia wzdłuż osi *Z* (duża odległość lub duża dokładność)
 ____________________________________________________________________________________________________________
 
-* [ ] Implementacja algorytmu w C++
+* [x] Implementacja algorytmu w C++
 
-* [ ] Optymalizacja kodu pod kątem CUDA
+* [x] Optymalizacja kodu pod kątem CUDA
 
-* [ ] Wykorzystanie MPI i CUDA
+* [x] Wykorzystanie MPI i CUDA
 
 * [ ] Docelowa architektura wykorzystująca protokół MPI i wiele GPU na jednym węźle
 
