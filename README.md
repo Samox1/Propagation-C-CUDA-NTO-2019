@@ -70,6 +70,7 @@ Karty Tesla K80 posiadają 11439 MiB możliwej do użycia pamięci RAM. Jak wida
 ## Przykładowe tablice po propagacji na zadane odległości: 
 
 | Z = 500 mm | Z = 600 mm | Z = 700 mm | Z = 800 mm |
+| ------ | ------ | ------ | ------ |
 |<img src="result/result_z_0.50000.bmp" width="200">|<img src="result/result_z_0.60000.bmp" width="200">|<img src="result/result_z_0.70000.bmp" width="200">|<img src="result/result_z_0.80000.bmp" width="200">|
 | ------ | ------ | ------ | ------ |
 | Z = 900 mm | Z = 1000 mm | Z = 1500 mm | Z = 1700 mm |
