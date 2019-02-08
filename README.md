@@ -47,5 +47,5 @@ ________________________________________________________________________________
 
 
 
-![Screenshot](https://gitlab.com/SimonPW/nto-2019/blob/master/Tablica_1024_Z_MPI.png)
+![img](https://gitlab.com/SimonPW/nto-2019/blob/master/Tablica_1024_Z_MPI.png)
 
