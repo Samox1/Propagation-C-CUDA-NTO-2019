@@ -52,3 +52,17 @@ ________________________________________________________________________________
 ![](Tablica_1024_Z_MPI.png)
 
 ![](Tablica_tmp_1024xN_time_for_1_node.png)
+
+Program został odpowiednio zoptymalizowany pod kątem pamięci, by nie było niepotrzebnych tablic zajmujących miejsce. W trakcie działania programu zauważono następujące maksymalne wartości użycia pamięci RAM na GPU:
+
+| u_in | Mnożnik M | Rozmiar Tablic tymczasowych | Max. użycie RAM-u na GPU [MiB] |
+| ------ | ------ | ------ | ------ |
+| 1024x1024 | 1 | 1024x1024 | 130 |
+| 1024x1024 | 2 | 2048x2048 | 356 |
+| 1024x1024 | 4 | 4096x4096 | 1380 |
+| 1024x1024 | 6 | 6144x6144 | 2980 |
+| 1024x1024 | 8 | 8192x8192 | 5220 | 
+| 1024x1024 | 10 | 10240x10240 | 8100 | 
+
+Karty Tesla K80 posiadają 11439 MiB możliwej do użycia pamięci RAM. Jak widać tymczasowe użycie pamięci GPU przy mnożniku M=10, sięga ponad 8 GiB. Przy wyższych mnożnikach, np. M=12, program wykonuje część zadań a podczas próby alokowania zbyt dużej ilości danych na GPU - funkcje zwracają problem z tworzeniem/alokowaniem pamięci.
+
