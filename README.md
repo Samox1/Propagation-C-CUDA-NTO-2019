@@ -71,10 +71,22 @@ Do testowania propagacji posłużyła nam tablica przechowująca informacje o pr
 Przezrocze (jako jasne punkty w tablicy) wyglądało następująco:<br>
 <img src="result/PNG/Test_NTO_1024.png" width="400"><br>
 <br>
-Podstawowe parametry do obliczenia rozkładu amplitudy w zadanej odległości za przezroczem wyglądały następująco:<br>
-Długość fali = 633 nm<br>
-Sampling = 10 mikrometrów (odległość od kolejnych punktów w przestrzeni x,y)<br>
+Podstawowe parametry do obliczenia rozkładu amplitudy w zadanej odległości za przezroczem wyglądały następująco:<br><br>
+Sampling = 10 [mikrometrów] (odległość od kolejnych punktów w przestrzeni x,y)<br>
+Wielkość tablicy = 1024x1024 = 10,24 x 10,24 [mm^2]<br>
+Długość fali = 633 [nm]<br>
 Wektor falowy = 2*pi/lambda<br>
+
+## Kompilacja i uruchamianie programu: 
+Cały kod został napisany w pliku *.cu - co wymuszało do kompilacji zastosowania dosyć złożonej komendy linkowania i ścieżek dla kompilatora:<br>
+compile: nvcc -o prop.x prop.cu -O3 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_37,code=sm_37 -gencode=arch=compute_60,code=sm_60 -I/usr/local/cuda/inc -L/usr/local/cuda/lib -lcufft -I/opt/openmpi-gcc721-Cuda90/3.1.1/include -Xcompiler "-pthread -fPIC" -L/opt/openmpi-gcc721-Cuda90/3.1.1/lib -lmpi
+<br>
+Aby korzystać z programu należy uruchomić go za pomocą danej komendy: <br>
+[dteam001@nodeXXX Projekt_Propagacja]$ mpirun -n NP prop.x TABLICA_WEJSCIOWA NX NY M <br>
+NP - liczba procesów MPI, której chcemy użyć <br>
+TABLICA_WEJSCIOWA - tablica zawierająca rozkład przezrocza <br>
+NX, NY - rozmiary tablicy wejściowej <br>
+M - mnożnik tablic użytych do obliczeń (ile razy większe mają być NX i NY) <br><br>
 
 
 ## Przykładowe tablice (1024x1024) po propagacji na zadane odległości: 
