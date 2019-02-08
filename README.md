@@ -35,7 +35,7 @@ Następnie każdy proces mnoży tranformatę tablicy wejściowej z transformatą
 Wykonano przykładowy kod w Pythonie wykorzystujący biblioteki numpy, scipy, PIL i pathlib. Używając tablicy 1024x1024 piksele sprawdzono amplitudę i fazę po propagacji na odległość 1 metra. Wynik wydaje się być prawidłowy porównując do obrazów z programu LightSword stworzonego specjalnie do takich obliczeń.
 Optymalizacji może jeszcze ulec funkcja PSF by uzyskać od razu *FFT{h}*. Działający algorytm jest podstawą do wyboru kierunku obliczeń przyszłego programu. <br>
 Program napisany w języku Python dostępny jest tutaj: [Propagacja_Python](https://gitlab.com/SimonPW/nto-2019/blob/master/Projekt%20NTO%20-%20Propagacja/scratch.py) <br>
-
+Dodatkowy kod w języku Python wspomagający przygotowanie danych i późniejszą obróbkę wyliczonych płaszczyzn: [Dodatek](https://gitlab.com/SimonPW/nto-2019/blob/master/Projekt%20NTO%20-%20Propagacja/scratch_1.py) <br>
 
 
 ## Wybór rodzaju obliczeń: 
