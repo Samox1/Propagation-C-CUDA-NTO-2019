@@ -73,4 +73,8 @@ Karty Tesla K80 posiadają 11439 MiB możliwej do użycia pamięci RAM. Jak wida
 | ------ | ------ | ------ | ------ |
 |<img src="result/result_z_0.50000.bmp" width="100">|<img src="result/result_z_0.60000.bmp" width="100">|<img src="result/result_z_0.70000.bmp" width="100">|<img src="result/result_z_0.80000.bmp" width="100">|
 | ------ | ------ | ------ | ------ |
+| Z = 900 mm | Z = 1000 mm | Z = 1500 mm | Z = 1700 mm |
 | ------ | ------ | ------ | ------ |
+|<img src="result/result_z_0.90000.bmp" width="100">|<img src="result/result_z_1.00000.bmp" width="100">|<img src="result/result_z_1.50000.bmp" width="100">|<img src="result/result_z_1.70000.bmp" width="100">|
+
+
