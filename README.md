@@ -34,14 +34,14 @@ Istnieje kilka metod symulacji propagacji światła m.in. liczenie całki tablic
 
 ## Wybór rodzaju obliczeń: 
 * [ ] Obliczenia na tablicach o dużych wartościach *N* (duża precyzja lub duża powierzchnia przeźrocza)
-* [ ] Obliczenia wzdłuż osi *Z* (duża odległość lub duża dokładność)
+* [x] Obliczenia wzdłuż osi *Z* (duża odległość lub duża dokładność)
 ____________________________________________________________________________________________________________
 
-* [ ] Implementacja algorytmu w C++
+* [x] Implementacja algorytmu w C++
 
-* [ ] Optymalizacja kodu pod kątem CUDA
+* [x] Optymalizacja kodu pod kątem CUDA
 
-* [ ] Wykorzystanie MPI i CUDA
+* [x] Wykorzystanie MPI i CUDA
 
 * [ ] Docelowa architektura wykorzystująca protokół MPI i wiele GPU na jednym węźle
 
