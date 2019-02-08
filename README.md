@@ -45,7 +45,9 @@ ________________________________________________________________________________
 
 * [ ] Docelowa architektura wykorzystująca protokół MPI i wiele GPU na jednym węźle
 
+____________________________________________________________________________________________________________
 
+## Wykonane testy skalowania: 
 
 ![](Tablica_1024_Z_MPI.png)
 
