@@ -46,3 +46,6 @@ ________________________________________________________________________________
 * [ ] Docelowa architektura wykorzystująca protokół MPI i wiele GPU na jednym węźle
 
 
+
+[pic](https://gitlab.com/SimonPW/nto-2019/blob/master/Tablica_1024_Z_MPI.png)
+
