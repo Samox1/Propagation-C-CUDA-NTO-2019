@@ -67,9 +67,14 @@ Program został odpowiednio zoptymalizowany pod kątem pamięci, by nie było ni
 Karty Tesla K80 posiadają 11439 MiB możliwej do użycia pamięci RAM. Jak widać tymczasowe użycie pamięci GPU przy mnożniku M=10, sięga ponad 8 GiB. Przy wyższych mnożnikach, np. M=12, program wykonuje część zadań a podczas próby alokowania zbyt dużej ilości danych na GPU - funkcje zwracają problem z tworzeniem/alokowaniem pamięci.
 
 
-Do testowania propagacji posłużyła nam tablica przechowująca informacje o przezroczu o wymiarach 1024x1024 (wcześniej przetworzonej z BMP do txt).
-Przezrocze (jako jasne punkty w tablicy) wyglądało następująco:
-<img src="result/PNG/Test_NTO_1024.png" width="400">
+Do testowania propagacji posłużyła nam tablica przechowująca informacje o przezroczu o wymiarach 1024x1024 (wcześniej przetworzonej z BMP do txt). <br>
+Przezrocze (jako jasne punkty w tablicy) wyglądało następująco:<br>
+<img src="result/PNG/Test_NTO_1024.png" width="400"><br>
+<br>
+Podstawowe parametry do obliczenia rozkładu amplitudy w zadanej odległości za przezroczem wyglądały następująco:<br>
+Długość fali = 633 nm<br>
+Sampling = 10 mikrometrów (odległość od kolejnych punktów w przestrzeni x,y)<br>
+Wektor falowy = 2*pi/lambda<br>
 
 
 ## Przykładowe tablice (1024x1024) po propagacji na zadane odległości: 
