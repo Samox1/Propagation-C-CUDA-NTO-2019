@@ -38,7 +38,7 @@ __global__ void multiplyElementwise(cufftDoubleComplex* f0, cufftDoubleComplex* 
     }
 }
 
-void u_in_in_big(double* u_in, cufftDoubleComplex* data, int NX, int NY)
+void u_in_in_big(double* u_in, cufftDoubleComplex* data, int NX, int NY, int multi)
 {
 	for(int ii=0; ii < NY ; ii++)
 	{
@@ -49,11 +49,11 @@ void u_in_in_big(double* u_in, cufftDoubleComplex* data, int NX, int NY)
 		}
 	}
 
-	for(int ii=0; ii < (int)NY/2 ; ii++)
+	for(int ii=0; ii < (int)NY/multi ; ii++)
 	{
-		for(int jj=0; jj < (int)NX/2 ; jj++)
+		for(int jj=0; jj < (int)NX/multi ; jj++)
 		{
-			data[(ii*NX+jj)+(NX*NY/4+NX/4)].x = u_in[ii*(NX/2)+jj];
+			data[(ii*NX+jj)+(NX*NY*(multi-1)/(multi*2)+NX*(multi-1)/(multi*2))].x = u_in[ii*(NX/multi)+jj];
 		}
 	}
 }
@@ -184,6 +184,7 @@ int IFFT_Z2Z(cufftDoubleComplex* dData, int NX, int NY)
 
 /*
  * complie: nvcc -o prop.x prop.cu -O3 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_37,code=sm_37 -gencode=arch=compute_60,code=sm_60 -I/usr/local/cuda/inc -L/usr/local/cuda/lib -lcufft -I/opt/openmpi-gcc721-Cuda90/3.1.1/include -Xcompiler "-pthread -fPIC" -Xlinker "-Wl,-rpath -Wl,/opt/openmpi-gcc721-Cuda90/3.1.1/lib -Wl,--enable-new-dtags" -L/opt/openmpi-gcc721-Cuda90/3.1.1/lib -lmpi
+ * compile: nvcc -o prop.x prop.cu -O3 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_37,code=sm_37 -gencode=arch=compute_60,code=sm_60 -I/usr/local/cuda/inc -L/usr/local/cuda/lib -lcufft -I/opt/openmpi-gcc721-Cuda90/3.1.1/include -Xcompiler "-pthread -fPIC" -L/opt/openmpi-gcc721-Cuda90/3.1.1/lib -lmpi
  * start program: ./prop.x Tablica-1024x1024.txt 1024 1024 > 1024x1024.txt
  */
 
@@ -230,9 +231,9 @@ if (ip == 0)
 }
 
 // --- Liczenie propagacji i FFT --- //
-	
-	int NX = 2*COL;
-	int NY = 2*ROW;
+	int multi = atoi(argv[4]);
+	int NX = COL*multi;
+	int NY = ROW*multi;
 
 // --- Przeliczenie h_z --- //
 
@@ -267,7 +268,7 @@ if (ip == 0)
 
 if (ip == 0)
 {
-	u_in_in_big(u_in, data, NX, NY);
+	u_in_in_big(u_in, data, NX, NY, multi);
 
 	// Liczenie U_in = FFT{u_in}
  	cudaMallocPitch(&dData, &pitch1, sizeof(cufftDoubleComplex)*NX, NY);
