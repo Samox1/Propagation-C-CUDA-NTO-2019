@@ -16,7 +16,6 @@ Program w skrócie wykonuje się w następujących krokach:
 10. Ostateczny wynik zostaje zapisany do pliku w postaci amplitudy.
 
 Pełny kod dostępny jest w repozytorium pod linkiem: [prop.cu](https://gitlab.com/SimonPW/nto-2019/blob/master/Propagation%20-%20C++%20&%20CUDA/prop.cu) <br>
-Program napisany w języku Python dostępny jest tutaj: [Propagacja_Python](https://gitlab.com/SimonPW/nto-2019/blob/master/Projekt%20NTO%20-%20Propagacja/scratch.py) <br>
 
 
 Jako metodę symulacji propagacji światła wykorzystano metodę splotową. Bardzo dobrą literaturą ukazującą algorytm, jak i zalety i wady tej metody jest artykuł profesora Macieja Sypka [[1]](https://gitlab.com/SimonPW/nto-2019/blob/master/B_01_199504_OptComm.PDF). Ze względu na czasochłonne obliczenia związane ze splotem dwóch funkcji, w tym przypadku tablicy wejściowej (u<sub>1</sub>) oraz odpowiedzi impulsowej (*h*) - PSF (Point Spread Function), wykorzystano własności transformacji Fouriera. Szybszą i wydajniejszą metodą będzie zrobienie *FFT{u<sub>1</sub>}* oraz *FFT{h}* i wymnożenie obu tablic ze sobą, *U<sub>2</sub>* = *FFT{u<sub>1</sub>}* x *FFT{h}*. Wynikiem odwrotnej transormaty Fouriera  tablicy *U<sub>2</sub>* , będzie tablica zespolonych wartości, *u<sub>2</sub>* , które zawierają informację o amplitudzie i fazie w danym miejscu w przestrzeni. <br />
@@ -28,6 +27,11 @@ Stworzenie tablicy wejściowej, wpisanie jej do większej tablicy oraz wykonanie
 Następnie każdy proces mnoży tranformatę tablicy wejściowej z transformatą odpowiedzi impulsowej. otrzymany wynik następnie poddawany jest odwrotnej transformacie Fouriera i przesyłany z GPU na hosta.
 
 
+* [x] Przykładowy kod w Pythonie
+
+Wykonano przykładowy kod w Pythonie wykorzystujący biblioteki numpy, scipy, PIL i pathlib. Używając tablicy 1024x1024 piksele sprawdzono amplitudę i fazę po propagacji na odległość 1 metra. Wynik wydaje się być prawidłowy porównując do obrazów z programu LightSword stworzonego specjalnie do takich obliczeń.
+Optymalizacji może jeszcze ulec funkcja PSF by uzyskać od razu *FFT{h}*. Działający algorytm jest podstawą do wyboru kierunku obliczeń przyszłego programu. <br>
+Program napisany w języku Python dostępny jest tutaj: [Propagacja_Python](https://gitlab.com/SimonPW/nto-2019/blob/master/Projekt%20NTO%20-%20Propagacja/scratch.py) <br>
 
 * [x] Przegląd Literatury
 
