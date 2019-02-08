@@ -66,3 +66,11 @@ Program został odpowiednio zoptymalizowany pod kątem pamięci, by nie było ni
 
 Karty Tesla K80 posiadają 11439 MiB możliwej do użycia pamięci RAM. Jak widać tymczasowe użycie pamięci GPU przy mnożniku M=10, sięga ponad 8 GiB. Przy wyższych mnożnikach, np. M=12, program wykonuje część zadań a podczas próby alokowania zbyt dużej ilości danych na GPU - funkcje zwracają problem z tworzeniem/alokowaniem pamięci.
 
+
+## Przykładowe tablice po propagacji na zadane odległości: 
+
+| Z = 500 mm | Z = 600 mm | Z = 700 mm | Z = 800 mm |
+| ------ | ------ | ------ | ------ |
+|<img src="result/result_z_0.50000.bmp" width="100">|<img src="result/result_z_0.60000.bmp" width="100">|<img src="result/result_z_0.70000.bmp" width="100">|<img src="result/result_z_0.80000.bmp" width="100">|
+| ------ | ------ | ------ | ------ |
+| ------ | ------ | ------ | ------ |
