@@ -78,7 +78,7 @@ Długość fali = 633 [nm]<br>
 Wektor falowy = 2*pi/lambda<br><br>
 
 ## Kompilacja i uruchamianie programu: 
-Cały kod został napisany w pliku *.cu - co wymuszało do kompilacji zastosowania dosyć złożonej komendy linkowania i ścieżek dla kompilatora:<br>
+Cały kod został napisany w pliku *.cu - co wymuszało do kompilacji zastosowania dosyć złożonej komendy linkowania i ścieżek dla kompilatora:<br><br>
 compile: nvcc -o prop.x prop.cu -O3 -gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_37,code=sm_37 -gencode=arch=compute_60,code=sm_60 -I/usr/local/cuda/inc -L/usr/local/cuda/lib -lcufft -I/opt/openmpi-gcc721-Cuda90/3.1.1/include -Xcompiler "-pthread -fPIC" -L/opt/openmpi-gcc721-Cuda90/3.1.1/lib -lmpi
 <br><br>
 Aby korzystać z programu należy uruchomić go za pomocą danej komendy: <br><br>
