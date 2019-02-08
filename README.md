@@ -22,9 +22,10 @@ Jako metodę symulacji propagacji światła wykorzystano metodę splotową. Bard
 Program przedstawia rozkład amplitudy fali świetlnej za przezroczem w zadanych przez użytkownika odległościach (z) od tego przezrocza. Rozkłady w różnych odległościach liczone są równolegle przez procesy MPI.
 Jedną z wad tego algorytmu są krawędzie tablic - wprowadzające zniekształcenia i wysokoczęstotliwościowy szum. Aby pominąć szkodliwe efekty *FFT* na krawędziach wprowadza się modyfikację algorytmu w postaci powiększenia tablic obliczeniowych do wymiarów *2Nx2N*. Tablica wejściowa, *NxN* , w tym przypadku przepisywana jest na środek większej tablicy. Tablicą wyjściową jest środkowa część *NxN*.
 
+Stworzenie tablicy wejściowej, wpisanie jej do większej tablicy oraz wykonanie transformaty tej tablicy robione jest wyłącznie przez proces "0". Reszta procesów oblicza odpowiedź impulsową, zależną od odległości z od przezrocza, różnej dla każdego procesu.
+Następnie każdy proces mnoży tranformatę tablicy wejściowej z transformatą odpowiedzi impulsowej. otrzymany wynik następnie poddawany jest odwrotnej transformacie Fouriera i przesyłany z GPU na hosta.
 
-Wykonano przykładowy kod w Pythonie wykorzystujący biblioteki numpy, scipy, PIL i pathlib. Używając tablicy 1024x1024 piksele sprawdzono amplitudę i fazę po propagacji na odległość 1 metra. Wynik wydaje się być prawidłowy porównując do obrazów z programu LightSword stworzonego specjalnie do takich obliczeń.
-Optymalizacji może jeszcze ulec funkcja PSF by uzyskać od razu *FFT{h}*. Działający algorytm jest podstawą do wyboru kierunku obliczeń przyszłego programu.
+
 
 * [x] Przegląd Literatury
 
