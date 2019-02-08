@@ -196,17 +196,22 @@ int main(int argc, char *argv[])
 
 	int ip, np;
 	MPI_Init(&argc, &argv);
-    	MPI_Comm_rank (MPI_COMM_WORLD, &ip);
-    	MPI_Comm_size (MPI_COMM_WORLD, &np);
+    	MPI_Comm_rank(MPI_COMM_WORLD, &ip);
+    	MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-//if (ip == 0)
-//{
-	ifstream inputFile;
+	double starttime, endtime;
+	starttime = MPI_Wtime();
+
 	int COL = atoi(argv[2]);
 	int ROW = atoi(argv[3]);
 	double u_in[ROW*COL];
-	cout << "DUPA WELCOME" << " | " << argv[0] << " | " << argv[1] << " | " << argv[2] << " | " << argv[3] << endl;
-	cout << "ROW: " << ROW << " | " << "COL: " << COL <<endl;
+
+if (ip == 0)
+{
+	ifstream inputFile;
+	//double u_in[ROW*COL];
+	//cout << "DUPA WELCOME" << " | " << argv[0] << " | " << argv[1] << " | " << argv[2] << " | " << argv[3] << endl;
+	//cout << "ROW: " << ROW << " | " << "COL: " << COL <<endl;
 	inputFile.open(argv[1]);
 	if (inputFile)
 	{
@@ -218,12 +223,11 @@ int main(int argc, char *argv[])
 				inputFile >> u_in[i*ROW+j];
 			}
 		}
-		cout << endl;
 	} else {
 		cout << "Error opening the file.\n";
 	}
 	inputFile.close();
-//}
+}
 
 // --- Liczenie propagacji i FFT --- //
 	
@@ -240,11 +244,12 @@ int main(int argc, char *argv[])
 	double z_delta = 50.0*(pow(10.0,(-3)));
 	double z = z_in+(ip*z_delta);
 	
-	printf("k = %.1f | lam = %.1f | z = %.1f", k, lam, z);
+	//printf("k = %.1f | lam = %.1f | z = %.4f mm | ", k, lam*(pow(10.0,(9))), z);
+	//printf(" ");
+	//MPI_Barrier(MPI_COMM_WORLD);
+	//printf("\n");
 
-	printf("\n");
-
-
+	//starttime = MPI_Wtime();
 // --- FFT tablicy wejsciowej --- //
 	cufftDoubleComplex* data;
 	data = (cufftDoubleComplex *) malloc ( sizeof(cufftDoubleComplex)* NX * NY);
@@ -256,14 +261,15 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Cuda error: Failed to allocate\n");
 		return -1;
 	}
+	
+	//starttime = MPI_Wtime();
+	size_t pitch1;
 
-//if (ip == 0)
-//{
+if (ip == 0)
+{
 	u_in_in_big(u_in, data, NX, NY);
 
-// Liczenie U_in = FFT{u_in}
-	
-	size_t pitch1;
+	// Liczenie U_in = FFT{u_in}
  	cudaMallocPitch(&dData, &pitch1, sizeof(cufftDoubleComplex)*NX, NY);
 	cudaMemcpy2D(dData,pitch1,data,sizeof(cufftDoubleComplex)*NX,sizeof(cufftDoubleComplex)*NX,NX,cudaMemcpyHostToDevice);
  	
@@ -273,11 +279,12 @@ int main(int argc, char *argv[])
 	}
 
 	if (FFT_Z2Z(dData, NX, NY) == -1) { return -1; }
-
-//}	
+	cudaMemcpy(data, dData, sizeof(cufftDoubleComplex)*NX*NY, cudaMemcpyDeviceToHost);
+}	
 	
-	//MPI_Bcast(data, NX*NY, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
-/*
+	MPI_Bcast(data, NX*NY, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
+
+	// W przypadku Bcast - pozostale watki musza skopiowac data (aka u_in) na GPU
 if(ip != 0){
 	cudaMallocPitch(&dData, &pitch1, sizeof(cufftDoubleComplex)*NX, NY);
 	cudaMemcpy2D(dData,pitch1,data,sizeof(cufftDoubleComplex)*NX,sizeof(cufftDoubleComplex)*NX,NX,cudaMemcpyHostToDevice);
@@ -287,7 +294,7 @@ if(ip != 0){
 		return -1;	
 	}
 }
-*/
+
 
 // Liczenie h_z
 
@@ -323,7 +330,7 @@ if(ip != 0){
 
 	cudaMemcpy(data, dData, sizeof(cufftDoubleComplex)*NX*NY, cudaMemcpyDeviceToHost);
 
-	printf( "\nCUFFT vals: \n");
+	//printf( "\nCUFFT vals: \n");
 	
 // Czytanie calosci
 
@@ -338,13 +345,17 @@ if(ip != 0){
 // --- Przeliczanie Amplitudy --- //
 
 	char filename[128];
-	snprintf ( filename, 128, "result_z_%10.5lf.txt", z );
+	snprintf ( filename, 128, "result_z_%.5lf.txt", z );
 	FILE* fp = fopen(filename,"w");
 
 	amplitude_print(u_out, NX, NY, fp);
 
 	fclose(fp);
-		
+
+	endtime = MPI_Wtime();
+	printf("\nProces MPI %i: Liczylo sie %f sekund\n", ip, endtime-starttime);
+	//MPI_Barrier(MPI_COMM_WORLD);
+
 	cudaFree(u_out);
 	cudaFree(data);
 	cudaFree(dData);
