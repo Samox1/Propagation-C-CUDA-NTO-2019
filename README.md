@@ -39,7 +39,7 @@ Dodatkowy kod w języku Python wspomagający przygotowanie danych i późniejsz�
 
 ![](Tablica_tmp_1024xN_time_for_1_node.png)
 
-Program został odpowiednio zoptymalizowany pod kątem pamięci, by nie było niepotrzebnych tablic zajmujących miejsce. W trakcie działania programu zauważono następujące maksymalne wartości użycia pamięci RAM na GPU:
+Program został odpowiednio zoptymalizowany pod kątem pamięci, by nie było niepotrzebnych tablic zajmujących miejsce. W jednym momencie na GPU znajdują się dwie tablice: FFT tablicy wejściowej oraz funkcja H(z). Te dwie tablice następnie są mnożone w celu symulacji rozkładu na zadanej odległości. W trakcie działania programu zauważono następujące maksymalne wartości użycia pamięci RAM na GPU:
 
 | u_in | Mnożnik M | Rozmiar Tablic tymczasowych | Max. użycie RAM-u na GPU [MiB] |
 | ------ | ------ | ------ | ------ |
